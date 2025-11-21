@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神秘塔羅占卜</title>
+    <style>
+        /* --- CSS 樣式區 --- */
+        body {
+            background: linear-gradient(135deg, #1a0b2e 0%, #4a148c 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            outline: none;
+            text-align: center;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        button {
+            background: linear-gradient(45deg, #ffd700, #ffa000);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: #3e2723;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        /* 抽牌結果區域 */
+        #result-area {
+            display: none; /* 預設隱藏 */
+            margin-top: 30px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .tarot-card {
+            width: 150px;
+            height: 220px;
+            background: linear-gradient(to bottom right, #2c3e50, #000);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .card-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+
+        .card-name {
+            font-size: 18px;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .fortune-text {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔮 命運塔羅牌</h1>
+        <p>請輸入您的姓名，默念心中的問題...</p>
+        
+        <div class="input-group">
+            <input type="text" id="username" placeholder="在此輸入姓名" autocomplete="off">
+        </div>
+        
+        <button onclick="drawCard()">✨ 開始抽牌</button>
+
+        <div id="result-area">
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 20px 0;">
+            <div class="tarot-card">
+                <span class="card-icon" id="card-icon">🃏</span>
+                <span class="card-name" id="card-name">牌名</span>
+            </div>
+            <h3 id="greeting">你好</h3>
+            <div class="fortune-text" id="fortune-desc">
+                運勢解析將顯示於此...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript 邏輯區 ---
+
+        // 簡化的 22 張大阿爾克那牌資料庫
+        const tarotDeck = [
+            { name: "0. 愚者 (The Fool)", icon: "🎒", meaning: "新的開始，冒險，天真。運勢：大膽嘗試新事物的好時機，不要害怕未知。" },
+            { name: "I. 魔術師 (The Magician)", icon: "🪄", meaning: "創造力，技能，意志力。運勢：你擁有實現目標所需的一切資源，行動吧！" },
+            { name: "II. 女祭司 (The High Priestess)", icon: "🌙", meaning: "直覺，神秘，潛意識。運勢：相信你的第六感，答案就在你心中，保持冷靜。" },
+            { name: "III. 皇后 (The Empress)", icon: "👑", meaning: "豐收，母性，自然。運勢：充滿愛與富足的時期，適合孕育計畫或享受生活。" },
+            { name: "IV. 皇帝 (The Emperor)", icon: "🏛️", meaning: "權威，結構，穩定。運勢：需要自律與組織能力，建立穩固的基礎將帶來成功。" },
+            { name: "V. 教皇 (The Hierophant)", icon: "📜", meaning: "傳統，精神指引，學習。運勢：尋求長輩或導師的建議，遵循傳統途徑會更順利。" },
+            { name: "VI. 戀人 (The Lovers)", icon: "❤️", meaning: "愛，和諧，選擇。運勢：人際關係將有重大進展，面臨重要抉擇時請聽從內心。" },
+            { name: "VII. 戰車 (The Chariot)", icon: "🐎", meaning: "勝利，意志力，控制。運勢：克服障礙的時刻，只要堅持到底，勝利屬於你。" },
+            { name: "VIII. 力量 (Strength)", icon: "🦁", meaning: "勇氣，耐心，內在力量。運勢：以柔克剛，展現你的耐心與包容力來解決問題。" },
+            { name: "IX. 隱士 (The Hermit)", icon: "🕯️", meaning: "反省，孤獨，引導。運勢：適合獨處思考，向內尋找智慧，暫時遠離喧囂。" },
+            { name: "X. 命運之輪 (Wheel of Fortune)", icon: "🎡", meaning: "轉變，運氣，循環。運勢：命運正在轉動，順應變化，好運即將到來。" },
+            { name: "XI. 正義 (Justice)", icon: "⚖️", meaning: "公平，真理，因果。運勢：誠實面對自己，保持客觀公正，你會得到應有的回報。" },
+            { name: "XII. 倒吊人 (The Hanged Man)", icon: "🦇", meaning: "犧牲，換位思考，等待。運勢：換個角度看世界，暫時的停滯是為了更好的躍進。" },
+            { name: "XIII. 死神 (Death)", icon: "💀", meaning: "結束，轉變，重生。運勢：告別過去不再適合你的事物，迎接全新的開始。" },
+            { name: "XIV. 節制 (Temperance)", icon: "🏺", meaning: "平衡，耐心，適度。運勢：保持中庸之道，協調生活中的衝突，身心平衡最重要。" },
+            { name: "XV. 惡魔 (The Devil)", icon: "⛓️", meaning: "束縛，誘惑，物質。運勢：小心過度沈迷或被物質慾望控制，檢視是否有不健康的依賴。" },
+            { name: "XVI. 高塔 (The Tower)", icon: "⚡", meaning: "劇變，啟示，崩塌。運勢：雖然可能有突如其來的改變，但這將打破虛假的表象。" },
+            { name: "XVII. 星星 (The Star)", icon: "🌟", meaning: "希望，靈感，平靜。運勢：充滿希望的時刻，願望有機會實現，保持樂觀。" },
+            { name: "XVIII. 月亮 (The Moon)", icon: "🌔", meaning: "幻覺，不安，潛意識。運勢：前方可能有些迷霧，不要輕易被表象迷惑，謹慎行事。" },
+            { name: "XIX. 太陽 (The Sun)", icon: "☀️", meaning: "快樂，成功，活力。運勢：極佳的運勢！充滿正能量，事情將會順利發展。" },
+            { name: "XX. 審判 (Judgement)", icon: "🎺", meaning: "覺醒，重生，召喚。運勢：回顧過去，做出重大決定的時刻，你將獲得新的使命感。" },
+            { name: "XXI. 世界 (The World)", icon: "🌍", meaning: "圓滿，完成，旅行。運勢：一個階段的完美結束，達成目標，享受成果。" }
+        ];
+
+        function drawCard() {
+            // 1. 獲取輸入的姓名
+            const nameInput = document.getElementById('username');
+            const name = nameInput.value.trim();
+            
+            // 2. 檢查是否有輸入名字
+            if (name === "") {
+                alert("請先輸入您的姓名喔！");
+                return;
+            }
+
+            // 3. 隨機抽取一張牌 (0 到 21)
+            const randomIndex = Math.floor(Math.random() * tarotDeck.length);
+            const card = tarotDeck[randomIndex];
+
+            // 4. 更新畫面內容
+            document.getElementById('card-icon').textContent = card.icon;
+            document.getElementById('card-name').textContent = card.name;
+            document.getElementById('greeting').textContent = `🔮 ${name} 抽到的牌是：`;
+            document.getElementById('fortune-desc').textContent = card.meaning;
+
+            // 5. 顯示結果區域
+            const resultArea = document.getElementById('result-area');
+            resultArea.style.display = 'none'; // 先隱藏以觸發重繪
+            
+            // 使用 setTimeout 創造一點點延遲感，讓動畫重新觸發
+            setTimeout(() => {
+                resultArea.style.display = 'block';
+                // 自動捲動到結果
+                resultArea.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
